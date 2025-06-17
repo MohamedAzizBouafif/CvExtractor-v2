@@ -1,0 +1,70 @@
+You are a React developer. Build a clean and minimal React front end for a CV Extractor web app.
+
+💡 BACKEND INFO:
+The backend runs at http://localhost:3000 and exposes a POST `/upload` endpoint. It accepts a PDF file (CV) and returns structured JSON like:
+
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "sex": "Male",
+  "language": "English",
+  "email": "john.doe@example.com",
+  "phone": "+1 555-1234",
+  "education": "MIT - BSc in Computer Science",
+  "skills": ["JavaScript", "React", "Node.js"],
+  "expertise": [
+    {
+      "date": "2022 - Present",
+      "company": "Google",
+      "role": "Frontend Engineer"
+    },
+    {
+      "date": "2020 - 2022",
+      "company": "Facebook",
+      "role": "Intern Developer"
+    }
+  ],
+  "summary": "A passionate frontend developer with 3+ years experience building web applications in React and Node.js. Strong communicator and fast learner."
+}
+
+📄 REQUIREMENTS:
+1. Use Create React App or Vite to set up the project.
+2. Keep code optimized and minimal — avoid unnecessary components or files. Use a clean structure.
+3. Only create two components:
+   - **UploadForm.jsx**: handles PDF upload and fetch call
+   - **InfoForm.jsx**: displays and allows editing of:
+     - First Name
+     - Last Name
+     - Sex (dropdown)
+     - Language
+     - Email
+     - Phone
+     - Education
+     - Skills (comma-separated string)
+     - Expertise list (each with Date, Company, Role)
+     - Summary (textarea for elevator pitch)
+4. Use `useState` to store the extracted data and `fetch()` to POST the PDF file to `/upload` using `multipart/form-data`.
+5. Show a loading state during the upload.
+6. Allow users to edit all fields after data is received.
+7. Style using Tailwind CSS (or plain CSS):
+   - Centered layout
+   - Neatly grouped fields
+   - Responsive design
+   - Modern input styles with spacing and clarity
+8. Handle errors clearly (e.g. file not selected, request fails).
+9. Include helpful comments.
+10. Keep the code short, clean, and readable.
+
+📁 FILES TO GENERATE:
+- `package.json`
+- `src/index.js`
+- `src/App.js`
+- `src/components/UploadForm.jsx`
+- `src/components/InfoForm.jsx`
+- `src/App.css` or Tailwind config if used
+
+📌 Additional:
+- Avoid creating a component per field unless absolutely necessary.
+- Do not add Redux or external state management.
+- Keep the codebase lightweight and focused on function.
+
