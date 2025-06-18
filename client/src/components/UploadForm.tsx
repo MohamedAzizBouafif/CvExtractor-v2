@@ -17,11 +17,11 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.type === 'application/pdf') {
+      if (file.type === "application/pdf") {
         setSelectedFile(file);
         setError(null);
       } else {
-        setError('Please select a valid PDF file.');
+        setError("Please select a valid PDF file.");
       }
     }
   };
@@ -34,50 +34,60 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
     if (file) {
-      if (file.type === 'application/pdf') {
+      if (file.type === "application/pdf") {
         setSelectedFile(file);
         setError(null);
       } else {
-        setError('Please drop a valid PDF file.');
+        setError("Please drop a valid PDF file.");
       }
     }
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      setError('Please select a PDF file first.');
+      setError("Please select a PDF file first.");
       return;
     }
 
     setIsUploading(true);
     setError(null);
-
     try {
       const formData = new FormData();
-      formData.append('cv', selectedFile);
+      formData.append("cv", selectedFile);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
+      const response = await fetch("/api/upload", {
+        method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Upload failed');
+        throw new Error(errorData.message || "Upload failed");
       }
 
       const extractedData = await response.json();
+
+      // Validate the data structure before passing it to the parent component
+      if (!extractedData || typeof extractedData !== "object") {
+        throw new Error("Invalid data received from server");
+      }
+
       onUploadSuccess(extractedData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process CV. Please try again.');
+      console.error("Upload error:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to process CV. Please try again."
+      );
     } finally {
       setIsUploading(false);
     }
@@ -92,20 +102,28 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
     <Card className="bg-white shadow-sm border border-gray-200">
       <CardContent className="p-8">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Upload CV Document</h2>
-          <p className="text-gray-600 mb-6">Upload a PDF file to extract professional information automatically</p>
-          
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Upload CV Document
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Upload a PDF file to extract professional information automatically
+          </p>
+
           {/* Upload Zone */}
           <div
             className="border-2 border-dashed border-gray-300 rounded-lg p-12 hover:border-primary transition-colors duration-200 cursor-pointer"
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            onClick={() => document.getElementById('cv-file')?.click()}
+            onClick={() => document.getElementById("cv-file")?.click()}
           >
             <div className="flex flex-col items-center">
               <Upload className="w-12 h-12 text-gray-400 mb-4" />
-              <p className="text-lg font-medium text-gray-900 mb-2">Drop your CV here or click to browse</p>
-              <p className="text-sm text-gray-500 mb-4">Supports PDF files up to 10MB</p>
+              <p className="text-lg font-medium text-gray-900 mb-2">
+                Drop your CV here or click to browse
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Supports PDF files up to 10MB
+              </p>
               <input
                 type="file"
                 id="cv-file"
@@ -113,7 +131,10 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
                 className="hidden"
                 onChange={handleFileSelect}
               />
-              <Button type="button" className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button
+                type="button"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
                 Choose File
               </Button>
             </div>
@@ -126,8 +147,12 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
                 <div className="flex items-center space-x-3">
                   <FileText className="w-8 h-8 text-red-500" />
                   <div className="text-left">
-                    <p className="font-medium text-gray-900">{selectedFile.name}</p>
-                    <p className="text-sm text-gray-500">{formatFileSize(selectedFile.size)}</p>
+                    <p className="font-medium text-gray-900">
+                      {selectedFile.name}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {formatFileSize(selectedFile.size)}
+                    </p>
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={removeFile}>
@@ -144,7 +169,7 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
               disabled={!selectedFile || isUploading}
               className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3"
             >
-              {isUploading ? 'Processing...' : 'Extract CV Information'}
+              {isUploading ? "Processing..." : "Extract CV Information"}
             </Button>
           </div>
 
@@ -153,7 +178,9 @@ export default function UploadForm({ onUploadSuccess }: UploadFormProps) {
             <div className="mt-6">
               <div className="flex items-center justify-center space-x-3">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                <p className="text-gray-600">Processing your CV... This may take a few moments.</p>
+                <p className="text-gray-600">
+                  Processing your CV... This may take a few moments.
+                </p>
               </div>
             </div>
           )}

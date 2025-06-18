@@ -6,7 +6,7 @@ import type { CVData } from "@shared/schema";
 
 export default function Home() {
   const [extractedData, setExtractedData] = useState<CVData | null>(null);
-  
+
   const handleUploadSuccess = (data: CVData) => {
     setExtractedData(data);
   };
@@ -26,7 +26,9 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">CV Extractor</h1>
-              <p className="text-sm text-gray-600">Extract and edit professional information from CV documents</p>
+              <p className="text-sm text-gray-600">
+                Extract and edit professional information from CV documents
+              </p>
             </div>
           </div>
         </div>
@@ -37,8 +39,8 @@ export default function Home() {
         {!extractedData ? (
           <UploadForm onUploadSuccess={handleUploadSuccess} />
         ) : (
-          <InfoForm 
-            extractedData={extractedData} 
+          <InfoForm
+            extractedData={extractedData}
             onUploadAnother={handleUploadAnother}
           />
         )}
@@ -48,7 +50,10 @@ export default function Home() {
       <footer className="bg-white border-t border-gray-200 mt-16">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="text-center text-gray-500 text-sm">
-            <p>&copy; 2024 CV Extractor. Professional CV analysis and extraction tool.</p>
+            <p>
+              &copy; 2024 CV Extractor. Professional CV analysis and extraction
+              tool.
+            </p>
           </div>
         </div>
       </footer>
