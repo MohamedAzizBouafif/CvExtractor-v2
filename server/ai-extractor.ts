@@ -4,19 +4,29 @@ import { cvDataSchema } from "@shared/schema";
 
 export async function extractCVData(
   pdfText: string
-): Promise<z.infer<typeof cvDataSchema>> {  // Initialize DeepSeek API configuration
+): Promise<z.infer<typeof cvDataSchema>> {
+  // Initialize DeepSeek API configuration
   const apiKey = process.env.DEEPSEEK_API_KEY;
-  
+
   // Log API key presence (not the actual key) for debugging
   console.log(`DeepSeek API key status: ${apiKey ? "Found" : "Missing"}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
-  console.log(`Some available environment variables: ${Object.keys(process.env)
-    .filter(key => !key.includes('KEY') && !key.includes('SECRET') && !key.includes('TOKEN'))
-    .slice(0, 10)
-    .join(', ')}`);
-  
+  console.log(
+    `Some available environment variables: ${Object.keys(process.env)
+      .filter(
+        (key) =>
+          !key.includes("KEY") &&
+          !key.includes("SECRET") &&
+          !key.includes("TOKEN")
+      )
+      .slice(0, 10)
+      .join(", ")}`
+  );
+
   if (!apiKey) {
-    throw new Error("DeepSeek API key not configured. Please add DEEPSEEK_API_KEY to environment variables.");
+    throw new Error(
+      "DeepSeek API key not configured. Please add DEEPSEEK_API_KEY to environment variables."
+    );
   }
 
   const prompt = `
@@ -27,7 +37,7 @@ Extract structured information from this CV text and return it as a well-formatt
   "last_name": string,
   "sex": string (Male/Female/Other/Prefer not to say),
   "language": array of strings (spoken languages),
-  "email": string,
+  "email": string (email or empty)
   "phone": array of strings (list of phone numbers),
   "location": string (current city and country),
   "linkedin": string (URL or empty),
@@ -48,20 +58,22 @@ Instructions:
 - For projects, capture as much structure as possible: name/industry/country/version/role/phases.
 - For education, include both university and ITI.
 - Only return a clean, valid JSON. Do not include any extra explanation or commentary.
+- If anthink is not indicated in the cv return as empty string with the key.
 
 CV Text:
 ${pdfText}
 
-`;  try {
+`;
+  try {
     // Add a debug flag to check if we're using production or test mode
-    const isProd = process.env.NODE_ENV === 'production';
-    console.log(`Running in ${isProd ? 'production' : 'development'} mode`);
-    
+    const isProd = process.env.NODE_ENV === "production";
+    console.log(`Running in ${isProd ? "production" : "development"} mode`);
+
     // DeepSeek API endpoint for chat completions
     const apiUrl = "https://api.deepseek.com/v1/chat/completions";
-    
+
     console.log(`Attempting to connect to DeepSeek API...`);
-    
+
     // API request configuration
     const response = await axios.post(
       apiUrl,
@@ -94,9 +106,10 @@ ${pdfText}
     const extractedData = JSON.parse(content || "{}");
 
     // Validate the extracted data against our schema
-    return cvDataSchema.parse(extractedData);  } catch (error: any) {
+    return cvDataSchema.parse(extractedData);
+  } catch (error: any) {
     console.error("DeepSeek API extraction error:");
-    
+
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
@@ -110,7 +123,9 @@ ${pdfText}
       // Something happened in setting up the request that triggered an Error
       console.error(`Error message: ${error.message}`);
     }
-    
-    throw new Error(`Failed to extract CV data: ${error.message || 'Unknown error'}`);
+
+    throw new Error(
+      `Failed to extract CV data: ${error.message || "Unknown error"}`
+    );
   }
 }
