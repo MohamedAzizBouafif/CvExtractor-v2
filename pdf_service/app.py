@@ -15,7 +15,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 # Configure upload folder for temporary PDFs
-UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'temp')
+# Use parent directory's temp folder to match the project structure
+UPLOAD_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'temp'))
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
     app.logger.info(f"Created upload folder: {UPLOAD_FOLDER}")
