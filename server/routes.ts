@@ -40,11 +40,16 @@ async function generatePDF(cvData: any): Promise<string> {
       }
     );
 
-    console.log("PDF service response:", response.data);
-
-    if (response.data && response.data.download_url) {
+    console.log("PDF service response:", response.data);    if (response.data && response.data.download_url) {
       console.log("PDF generated successfully:", response.data.download_url);
-      return response.data.download_url;
+      
+      // Convert internal URL to public proxy URL
+      const internalUrl = response.data.download_url;
+      const filename = internalUrl.split('/').pop(); // Extract filename
+      const publicUrl = `/api/pdf/${filename}`;
+      
+      console.log("Converted to public URL:", publicUrl);
+      return publicUrl;
     } else {
       throw new Error("PDF service did not return a download URL");
     }  } catch (error: any) {
@@ -186,6 +191,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "PDF service is not available",
         error: error.message
       });
+    }
+  });
+
+  // PDF proxy route - serves PDFs from internal service through main app
+  app.get("/api/pdf/:filename", async (req, res) => {
+    try {
+      const filename = req.params.filename;
+      const pdfUrl = `${PDF_SERVICE_URL}/pdf/${filename}`;
+      
+      // Fetch PDF from internal service
+      const response = await axios.get(pdfUrl, {
+        responseType: 'stream',
+        timeout: 10000
+      });
+      
+      // Set proper headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      
+      // Pipe the PDF stream to response
+      response.data.pipe(res);
+      
+    } catch (error: any) {
+      console.error('PDF proxy error:', error.message);
+      if (error.response?.status === 404) {
+        res.status(404).json({ error: "PDF not found" });
+      } else {
+        res.status(500).json({ error: "Failed to retrieve PDF" });
+      }
     }
   });
 
