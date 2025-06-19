@@ -10,10 +10,17 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Enable logging for debugging
+import logging
+logging.basicConfig(level=logging.INFO)
+
 # Configure upload folder for temporary PDFs
 UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'temp')
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+    app.logger.info(f"Created upload folder: {UPLOAD_FOLDER}")
+
+app.logger.info(f"PDF service starting, upload folder: {UPLOAD_FOLDER}")
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -33,12 +40,21 @@ def create_pdf():
         # Generate a unique filename
         filename = f"{uuid.uuid4()}.pdf"
         filepath = os.path.join(UPLOAD_FOLDER, filename)
-        
-        # Generate the PDF
+          # Generate the PDF
+        app.logger.info(f"Generating PDF: {filepath}")
         generate_pdf(cv_data, filepath)
+        
+        # Check if file was created successfully
+        if os.path.exists(filepath):
+            file_size = os.path.getsize(filepath)
+            app.logger.info(f"PDF created successfully: {filepath} ({file_size} bytes)")
+        else:
+            app.logger.error(f"PDF generation failed - file not created: {filepath}")
+            return jsonify({"error": "PDF generation failed"}), 500
         
         # Generate download URL
         download_url = url_for('get_pdf', filename=filename, _external=True)
+        app.logger.info(f"Download URL: {download_url}")
         
         return jsonify({
             "message": "PDF generated successfully",
@@ -51,19 +67,43 @@ def create_pdf():
 def get_pdf(filename):
     """Serve the generated PDF file"""
     try:
+        app.logger.info(f"PDF request received for: {filename}")
+        
+        # Validate filename to prevent directory traversal
+        if not filename.endswith('.pdf') or '/' in filename or '\\' in filename:
+            app.logger.error(f"Invalid filename: {filename}")
+            return jsonify({"error": "Invalid filename"}), 400
+            
         filepath = os.path.join(UPLOAD_FOLDER, filename)
+        app.logger.info(f"Looking for PDF at: {filepath}")
         
         # Check if file exists
         if not os.path.exists(filepath):
+            app.logger.error(f"PDF not found: {filepath}")
+            # List files in directory for debugging
+            files = os.listdir(UPLOAD_FOLDER) if os.path.exists(UPLOAD_FOLDER) else []
+            app.logger.info(f"Files in upload folder: {files}")
             return jsonify({"error": "PDF not found"}), 404
         
-        # Set headers for file download
-        return send_file(filepath, 
-                         mimetype='application/pdf',
-                         as_attachment=True,
-                         download_name="CV.pdf")
+        # Extract CV name for download filename
+        cv_name = filename.replace('.pdf', '').replace('-', '_')
+        download_filename = f"cv-{cv_name}.pdf"
+        
+        # Use more compatible send_file parameters
+        try:
+            return send_file(filepath, 
+                           mimetype='application/pdf',
+                           as_attachment=True,
+                           attachment_filename=download_filename)
+        except TypeError:
+            # Fallback for newer Flask versions
+            return send_file(filepath, 
+                           mimetype='application/pdf',
+                           as_attachment=True)
+            
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        app.logger.error(f"Error serving PDF {filename}: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 # Cleanup routine to delete old PDFs (could be improved with a scheduled task)
 @app.route('/cleanup', methods=['POST'])
