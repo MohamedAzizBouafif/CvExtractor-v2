@@ -6,7 +6,7 @@ export function ActionButtons({
 }: {
   onUploadAnother: () => void;
 }) {
-  const { handleSave, handleExport, handleExportPDF, handleReset } = useCVForm();
+  const { handleSave, handleExportPDF, handleReset } = useCVForm();
 
   return (
     <div className="space-y-6">      {/* Action Buttons */}
@@ -16,9 +16,6 @@ export function ActionButtons({
           className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
         >
           Save Changes
-        </Button>
-        <Button onClick={handleExport} variant="outline" className="flex-1">
-          Export JSON
         </Button>
         <Button onClick={handleExportPDF} variant="default" className="flex-1">
           Export PDF

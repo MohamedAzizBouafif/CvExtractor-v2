@@ -6,6 +6,7 @@ import { cvDataSchema } from "@shared/schema";
 import { extractCVData } from "./ai-extractor";
 import { createRequire } from "module";
 import axios from "axios";
+import { pdfServiceManager } from "./pdf-service-manager.js";
 
 const require = createRequire(import.meta.url);
 // Use pdf-parse instead of pdf-text-extract (no external dependencies)
@@ -17,14 +18,12 @@ const PDF_SERVICE_URL = process.env.PDF_SERVICE_URL || "http://localhost:5001";
 // Function to generate PDF via Python service
 async function generatePDF(cvData: any): Promise<string> {
   try {
-    // First, check if the PDF service is running
+    // Ensure PDF service is running
     console.log("Checking PDF service health...");
-    const healthResponse = await axios.get(`${PDF_SERVICE_URL}/health`, {
-      timeout: 5000
-    });
+    const serviceRunning = await pdfServiceManager.ensurePDFServiceRunning();
     
-    if (healthResponse.status !== 200) {
-      throw new Error("PDF service is not healthy");
+    if (!serviceRunning) {
+      throw new Error("PDF service could not be started. Please check if Python and required packages are installed.");
     }
     
     console.log("PDF service is running. Generating PDF...");
@@ -48,11 +47,10 @@ async function generatePDF(cvData: any): Promise<string> {
       return response.data.download_url;
     } else {
       throw new Error("PDF service did not return a download URL");
-    }
-  } catch (error: any) {
+    }  } catch (error: any) {
     console.error("Error generating PDF:", error.message);
     if (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND") {
-      throw new Error("PDF service is not running. Please start it by running: cd pdf_service && python app.py");
+      throw new Error("PDF service could not be started. Please ensure Python is installed and run: npm run pdf:install");
     } else if (error.code === "ETIMEDOUT") {
       throw new Error("PDF generation timed out. The PDF service may be overloaded.");
     }

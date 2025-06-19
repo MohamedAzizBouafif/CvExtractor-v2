@@ -16,12 +16,10 @@ interface CVFormContextProps {
   handleProjectPhasesChange: (index: number, value: string) => void;
   addEducation: () => void;
   removeEducation: (index: number) => void;
-  addExperience: () => void;
-  removeExperience: (index: number) => void;
+  addExperience: () => void;  removeExperience: (index: number) => void;
   addProject: () => void;
   removeProject: (index: number) => void;
   handleSave: () => void;
-  handleExport: () => void;
   handleExportPDF: () => Promise<void>;
   handleReset: () => void;
 }
@@ -193,23 +191,6 @@ export function CVFormProvider({ children, initialData }: CVFormProviderProps) {
     });
   };
 
-  const handleExport = () => {
-    const dataStr = JSON.stringify(formData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${formData.first_name}_${formData.last_name}_CV_data.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: "Data exported",
-      description: "CV data has been downloaded as JSON file.",
-    });
-  };
   const handleExportPDF = async () => {
     try {
       toast({
@@ -225,11 +206,19 @@ export function CVFormProvider({ children, initialData }: CVFormProviderProps) {
         body: JSON.stringify(formData),
       });
 
-      const result = await response.json();
-
-      if (result.success && result.pdfUrl) {
-        // Open the PDF URL in a new tab for download
-        window.open(result.pdfUrl, '_blank');
+      const result = await response.json();      if (result.success && result.pdfUrl) {
+        // Create a download link with proper filename
+        const firstName = formData.first_name || 'Unknown';
+        const lastName = formData.last_name || 'User';
+        const filename = `cv-${firstName}_${lastName}.pdf`;
+        
+        const link = document.createElement('a');
+        link.href = result.pdfUrl;
+        link.download = filename;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         
         toast({
           title: "PDF Generated",
@@ -295,9 +284,7 @@ export function CVFormProvider({ children, initialData }: CVFormProviderProps) {
         addExperience,
         removeExperience,
         addProject,
-        removeProject,
-        handleSave,
-        handleExport,
+        removeProject,        handleSave,
         handleExportPDF,
         handleReset,
       }}

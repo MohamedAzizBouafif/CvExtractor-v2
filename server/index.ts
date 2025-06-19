@@ -55,10 +55,9 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     serveStatic(app);
-  }
-  // Use environment variable PORT for cloud deployment or default to 5000
+  }  // Use environment variable PORT for cloud deployment or default to 3000
   // this serves both the API and the client.
-  const port = process.env.PORT || 5000;
+  const port = process.env.PORT || 3000;
   
   // Use 0.0.0.0 to bind to all network interfaces
   // This is necessary for cloud deployments like Render
