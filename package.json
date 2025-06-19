@@ -6,10 +6,11 @@
     "dev": "concurrently \"cd pdf_service && python app.py\" \"cross-env NODE_ENV=development tsx server/index.ts\"",
     "dev:node-only": "cross-env NODE_ENV=development tsx server/index.ts",
     "dev:pdf-only": "cd pdf_service && python app.py",
-    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
-    "start": "cross-env NODE_ENV=production node dist/index.js",
+    "build": "cd pdf_service && pip install -r requirements.txt && cd .. && vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "start": "cd pdf_service && pip install -r requirements.txt && cd .. && cross-env NODE_ENV=production node dist/index.js",
     "start:production": "bash start-production.sh",
-    "start:with-pdf": "concurrently \"cd pdf_service && python app.py\" \"npm start\"",
+    "start:robust": "bash start-robust.sh",
+    "start:with-pdf": "concurrently \"cd pdf_service && pip install -r requirements.txt && python app.py\" \"npm start\"",
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "test-api": "tsx server/test-api-key.ts",
@@ -17,7 +18,7 @@
     "install:prod": "npm install --omit=dev",
     "pdf:start": "powershell -ExecutionPolicy Bypass -File pdf_service/start_service.ps1",
     "pdf:install": "cd pdf_service && pip install -r requirements.txt",
-    "deploy:setup": "npm run pdf:install && npm run build"
+    "deploy:setup": "bash deploy.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

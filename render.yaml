@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: cv-extractor
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:robust
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PDF_SERVICE_URL
+        value: http://localhost:5001
+      - key: PORT
+        value: 3000
+    autoDeploy: true
