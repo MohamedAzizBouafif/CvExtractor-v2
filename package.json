@@ -10,7 +10,7 @@
     "start": "cd pdf_service && pip install -r requirements.txt && cd .. && cross-env NODE_ENV=production node dist/index.js",
     "start:production": "bash start-production.sh",
     "start:robust": "bash start-robust.sh",
-    "start:with-pdf": "concurrently \"cd pdf_service && pip install -r requirements.txt && python app.py\" \"npm start\"",
+    "start:with-pdf": "concurrently \"cd pdf_service && pip install -r requirements.txt && PDF_SERVICE_PORT=5001 python app.py\" \"npm start\"",
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "test-api": "tsx server/test-api-key.ts",

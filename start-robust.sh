@@ -50,9 +50,10 @@ echo "✅ PDF dependencies installed"
 
 # Start PDF service in background
 echo "🔧 Starting PDF service..."
+export PDF_SERVICE_PORT=5001
 $PYTHON_CMD app.py &
 PDF_PID=$!
-echo "✅ PDF service started with PID: $PDF_PID"
+echo "✅ PDF service started with PID: $PDF_PID on port 5001"
 
 # Go back to project root
 cd ..

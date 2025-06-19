@@ -81,5 +81,7 @@ def cleanup_files():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5001))
+    # Use dedicated PDF_SERVICE_PORT or fallback to 5001
+    # Don't use PORT env var as it conflicts with main app port
+    port = int(os.environ.get('PDF_SERVICE_PORT', 5001))
     app.run(host='0.0.0.0', port=port, debug=os.environ.get('DEBUG', 'False').lower() == 'true')

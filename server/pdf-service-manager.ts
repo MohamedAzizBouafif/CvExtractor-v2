@@ -11,8 +11,15 @@ class PDFServiceManager {
   private isStarting = false;
   private maxRetries = 3;
   private retryCount = 0;
+  private readonly isProduction = process.env.NODE_ENV === 'production';
 
   async startPDFService(): Promise<boolean> {
+    // In production, don't start the service - it should already be running
+    if (this.isProduction) {
+      console.log("Production mode: PDF service should be managed externally");
+      return await this.isPDFServiceRunning();
+    }
+
     if (this.isStarting) {
       console.log("PDF service is already starting...");
       return false;
@@ -76,10 +83,10 @@ class PDFServiceManager {
 
     throw new Error("PDF service failed to start within timeout");
   }
-
   async isPDFServiceRunning(): Promise<boolean> {
     try {
-      const response = await axios.get('http://localhost:5001/health', {
+      const pdfServiceUrl = process.env.PDF_SERVICE_URL || 'http://localhost:5001';
+      const response = await axios.get(`${pdfServiceUrl}/health`, {
         timeout: 2000
       });
       return response.status === 200;
@@ -87,10 +94,15 @@ class PDFServiceManager {
       return false;
     }
   }
-
   async ensurePDFServiceRunning(): Promise<boolean> {
     if (await this.isPDFServiceRunning()) {
       return true;
+    }
+
+    // In production, if service is not running, we can't start it
+    if (this.isProduction) {
+      console.error("PDF service is not running in production. Check your deployment configuration.");
+      return false;
     }
 
     if (this.retryCount >= this.maxRetries) {

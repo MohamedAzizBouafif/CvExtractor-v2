@@ -10,6 +10,8 @@ services:
         value: production
       - key: PDF_SERVICE_URL
         value: http://localhost:5001
+      - key: PDF_SERVICE_PORT
+        value: 5001
       - key: PORT
         value: 3000
       - key: PYTHON_VERSION
