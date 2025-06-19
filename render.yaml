@@ -3,17 +3,15 @@ services:
     name: cv-extractor
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm run start:production-safe
+    buildCommand: cd pdf_service && pip install -r requirements.txt && cd .. && npm install && npm run build
+    startCommand: npm run start:shell
     envVars:
       - key: NODE_ENV
         value: production
       - key: PDF_SERVICE_URL
-        value: http://localhost:5001
+        value: http://127.0.0.1:5001
       - key: PDF_SERVICE_PORT
         value: 5001
-      - key: PORT
-        value: 3000
       - key: PYTHON_VERSION
         value: 3.11.9
     autoDeploy: true
