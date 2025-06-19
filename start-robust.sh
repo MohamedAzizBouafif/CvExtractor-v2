@@ -31,10 +31,20 @@ echo "✅ Using pip: $PIP_CMD"
 # Install PDF service dependencies
 echo "📦 Installing PDF service dependencies..."
 cd pdf_service || exit 1
-$PIP_CMD install -r requirements.txt
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to install Python dependencies"
-    exit 1
+
+# Try to upgrade pip first
+echo "🔄 Upgrading pip..."
+$PIP_CMD install --upgrade pip
+
+# Install requirements with fallback
+if ! $PIP_CMD install -r requirements.txt; then
+    echo "⚠️  Main requirements failed, trying fallback..."
+    if [ -f "requirements-fallback.txt" ]; then
+        $PIP_CMD install -r requirements-fallback.txt
+    else
+        echo "❌ No fallback requirements found"
+        exit 1
+    fi
 fi
 echo "✅ PDF dependencies installed"
 

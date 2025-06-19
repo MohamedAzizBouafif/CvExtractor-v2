@@ -1,6 +1,6 @@
 flask==3.0.3
 werkzeug==3.0.3
-reportlab==4.0.4
-gunicorn==21.2.0
-python-dotenv==1.0.0
-pillow==10.2.0
+reportlab==4.2.2
+gunicorn==22.0.0
+python-dotenv==1.0.1
+pillow==10.4.0

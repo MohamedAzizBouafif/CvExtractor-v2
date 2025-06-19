@@ -12,4 +12,6 @@ services:
         value: http://localhost:5001
       - key: PORT
         value: 3000
+      - key: PYTHON_VERSION
+        value: 3.11.9
     autoDeploy: true

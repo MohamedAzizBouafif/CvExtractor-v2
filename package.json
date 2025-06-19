@@ -6,7 +6,7 @@
     "dev": "concurrently \"cd pdf_service && python app.py\" \"cross-env NODE_ENV=development tsx server/index.ts\"",
     "dev:node-only": "cross-env NODE_ENV=development tsx server/index.ts",
     "dev:pdf-only": "cd pdf_service && python app.py",
-    "build": "cd pdf_service && pip install -r requirements.txt && cd .. && vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build": "cd pdf_service && pip install --upgrade pip && pip install -r requirements.txt && cd .. && vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "cd pdf_service && pip install -r requirements.txt && cd .. && cross-env NODE_ENV=production node dist/index.js",
     "start:production": "bash start-production.sh",
     "start:robust": "bash start-robust.sh",

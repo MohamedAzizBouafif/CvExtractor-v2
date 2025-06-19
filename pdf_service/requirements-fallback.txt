@@ -1,0 +1,7 @@
+# Alternative requirements.txt for older Python versions or problematic environments
+flask==2.3.3
+werkzeug==2.3.7
+reportlab==4.0.8
+gunicorn==21.2.0
+python-dotenv==0.21.1
+pillow==9.5.0
