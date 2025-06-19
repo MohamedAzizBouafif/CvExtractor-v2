@@ -5,10 +5,60 @@ import { z } from "zod";
 import { cvDataSchema } from "@shared/schema";
 import { extractCVData } from "./ai-extractor";
 import { createRequire } from "module";
+import axios from "axios";
 
 const require = createRequire(import.meta.url);
 // Use pdf-parse instead of pdf-text-extract (no external dependencies)
 const pdfParse = require("pdf-parse");
+
+// PDF Service Configuration
+const PDF_SERVICE_URL = process.env.PDF_SERVICE_URL || "http://localhost:5001";
+
+// Function to generate PDF via Python service
+async function generatePDF(cvData: any): Promise<string> {
+  try {
+    // First, check if the PDF service is running
+    console.log("Checking PDF service health...");
+    const healthResponse = await axios.get(`${PDF_SERVICE_URL}/health`, {
+      timeout: 5000
+    });
+    
+    if (healthResponse.status !== 200) {
+      throw new Error("PDF service is not healthy");
+    }
+    
+    console.log("PDF service is running. Generating PDF...");
+    console.log("Sending CV data to PDF service...");
+
+    const response = await axios.post(
+      `${PDF_SERVICE_URL}/generate-pdf`,
+      cvData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        timeout: 30000, // 30 second timeout
+      }
+    );
+
+    console.log("PDF service response:", response.data);
+
+    if (response.data && response.data.download_url) {
+      console.log("PDF generated successfully:", response.data.download_url);
+      return response.data.download_url;
+    } else {
+      throw new Error("PDF service did not return a download URL");
+    }
+  } catch (error: any) {
+    console.error("Error generating PDF:", error.message);
+    if (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND") {
+      throw new Error("PDF service is not running. Please start it by running: cd pdf_service && python app.py");
+    } else if (error.code === "ETIMEDOUT") {
+      throw new Error("PDF generation timed out. The PDF service may be overloaded.");
+    }
+    throw new Error(`Failed to generate PDF: ${error.message}`);
+  }
+}
 
 // Configure multer for file uploads
 const upload = multer({
@@ -93,6 +143,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res
         .status(500)
         .json({ message: "Failed to process CV: " + errorMessage });
+    }
+  });
+
+  // PDF Generation endpoint
+  app.post("/api/generate-pdf", async (req, res) => {
+    try {
+      const cvData = req.body;
+      
+      // Validate the CV data
+      const validatedData = cvDataSchema.parse(cvData);
+      
+      // Generate PDF using Python service
+      const pdfUrl = await generatePDF(validatedData);
+      
+      res.json({ 
+        success: true, 
+        pdfUrl,
+        message: "PDF generated successfully"
+      });
+    } catch (error: any) {
+      console.error('Error in PDF generation route:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to generate PDF', 
+        error: error.message 
+      });
+    }
+  });
+
+  // Health check for PDF service
+  app.get("/api/pdf-service/health", async (req, res) => {
+    try {
+      const response = await axios.get(`${PDF_SERVICE_URL}/health`, {
+        timeout: 5000
+      });
+      res.json({
+        status: "healthy",
+        pdfService: response.data
+      });
+    } catch (error: any) {
+      res.status(503).json({
+        status: "unhealthy",
+        message: "PDF service is not available",
+        error: error.message
+      });
     }
   });
 

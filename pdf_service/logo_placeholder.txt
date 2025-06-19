@@ -1,0 +1,16 @@
+SAPPCON Logo Instructions
+
+1. Add the SAPPCON logo as 'logo.png' in this directory (pdf_service/)
+2. The PDF generator will automatically detect and use it
+
+Recommended specifications:
+- Format: PNG with transparent background preferred
+- Size: 200x80 pixels (or maintain aspect ratio)
+- High resolution (300 DPI) for crisp PDF rendering
+- Logo should work well on white backgrounds
+
+Current brand colors in use:
+- Primary: #2968CE (SAPPCON Blue)
+- Secondary: #B4975F (SAPPCON Gold)
+
+If logo.png is not found, the generator will use "SAPPCON" text as fallback.

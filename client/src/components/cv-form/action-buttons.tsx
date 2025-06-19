@@ -6,11 +6,10 @@ export function ActionButtons({
 }: {
   onUploadAnother: () => void;
 }) {
-  const { handleSave, handleExport, handleReset } = useCVForm();
+  const { handleSave, handleExport, handleExportPDF, handleReset } = useCVForm();
 
   return (
-    <div className="space-y-6">
-      {/* Action Buttons */}
+    <div className="space-y-6">      {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 pt-6">
         <Button
           onClick={handleSave}
@@ -19,7 +18,10 @@ export function ActionButtons({
           Save Changes
         </Button>
         <Button onClick={handleExport} variant="outline" className="flex-1">
-          Export Data
+          Export JSON
+        </Button>
+        <Button onClick={handleExportPDF} variant="default" className="flex-1">
+          Export PDF
         </Button>
         <Button onClick={handleReset} variant="outline" className="flex-1">
           Reset Form

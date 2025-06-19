@@ -2,8 +2,7 @@
   "name": "rest-express",
   "version": "1.0.0",
   "type": "module",
-  "license": "MIT",
-  "scripts": {
+  "license": "MIT",  "scripts": {
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "cross-env NODE_ENV=production node dist/index.js",
@@ -11,7 +10,9 @@
     "db:push": "drizzle-kit push",
     "test-api": "tsx server/test-api-key.ts",
     "clean": "powershell -ExecutionPolicy Bypass -File cleanup.ps1",
-    "install:prod": "npm install --omit=dev"
+    "install:prod": "npm install --omit=dev",
+    "pdf:start": "powershell -ExecutionPolicy Bypass -File pdf_service/start_service.ps1",
+    "pdf:install": "cd pdf_service && pip install -r requirements.txt"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

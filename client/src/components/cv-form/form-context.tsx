@@ -22,6 +22,7 @@ interface CVFormContextProps {
   removeProject: (index: number) => void;
   handleSave: () => void;
   handleExport: () => void;
+  handleExportPDF: () => Promise<void>;
   handleReset: () => void;
 }
 
@@ -209,6 +210,44 @@ export function CVFormProvider({ children, initialData }: CVFormProviderProps) {
       description: "CV data has been downloaded as JSON file.",
     });
   };
+  const handleExportPDF = async () => {
+    try {
+      toast({
+        title: "Generating PDF",
+        description: "Please wait while we generate your CV...",
+      });
+
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.pdfUrl) {
+        // Open the PDF URL in a new tab for download
+        window.open(result.pdfUrl, '_blank');
+        
+        toast({
+          title: "PDF Generated",
+          description: "Your CV has been generated successfully!",
+        });
+      } else {
+        throw new Error(result.error || 'Failed to generate PDF');
+      }
+    } catch (error: any) {
+      console.error('PDF export error:', error);
+      
+      toast({
+        title: "Export Failed",
+        description: error.message || "Could not generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleReset = () => {
     setFormData({
@@ -259,6 +298,7 @@ export function CVFormProvider({ children, initialData }: CVFormProviderProps) {
         removeProject,
         handleSave,
         handleExport,
+        handleExportPDF,
         handleReset,
       }}
     >

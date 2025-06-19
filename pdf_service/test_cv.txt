@@ -1,0 +1,32 @@
+==================================================
+CURRICULUM VITAE
+==================================================
+
+Name: John Doe
+Email: john.doe@example.com
+Phone: 123-456-7890
+Location: New York, NY
+
+PROFESSIONAL SUMMARY
+--------------------
+Experienced software developer with 5+ years of experience in web development.
+
+SKILLS
+------
+JavaScript, Python, React, Node.js
+
+PROFESSIONAL EXPERIENCE
+------------------------
+• Senior Developer at Tech Corp
+  2020-Present
+  Lead development of web applications using modern technologies.
+
+EDUCATION
+---------
+• Bachelor of Computer Science
+  University of Technology
+  2016 - 2020
+
+
+--------------------------------------------------
+Generated on 2025-06-19 13:06:13
