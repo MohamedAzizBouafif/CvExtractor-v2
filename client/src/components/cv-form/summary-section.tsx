@@ -3,7 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCVForm } from "./form-context";
 
 export function SummarySection() {
-  const { formData, handleInputChange } = useCVForm();
+  const { formData, updateField } = useCVForm();
 
   return (
     <div className="space-y-6">
@@ -18,7 +18,7 @@ export function SummarySection() {
         <Textarea
           id="summary"
           value={formData.summary}
-          onChange={(e) => handleInputChange("summary", e.target.value)}
+          onChange={(e) => updateField("summary", e.target.value)}
           rows={4}
           className="mt-2 resize-none"
           placeholder="Brief professional summary..."

@@ -2,11 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
-import { useCVForm } from "./form-context";
+import { useCVForm, useCVFormActions } from "./form-context";
 
-export function EducationSection() {
-  const { formData, handleEducationChange, addEducation, removeEducation } =
-    useCVForm();
+export function EducationSection() {  const { formData, updateNestedField } = useCVForm();
+  const { addEducation, removeEducation } = useCVFormActions();
 
   return (
     <div className="space-y-6">
@@ -32,7 +31,7 @@ export function EducationSection() {
                   id={`degree-${index}`}
                   value={edu.degree}
                   onChange={(e) =>
-                    handleEducationChange(index, "degree", e.target.value)
+                    updateNestedField("education", index, "degree", e.target.value)
                   }
                   className="mt-2"
                   placeholder="e.g., Bachelor of Science in Computer Science"
@@ -49,7 +48,7 @@ export function EducationSection() {
                   id={`institution-${index}`}
                   value={edu.institution}
                   onChange={(e) =>
-                    handleEducationChange(index, "institution", e.target.value)
+                    updateNestedField("education", index, "institution", e.target.value)
                   }
                   className="mt-2"
                   placeholder="University name"
@@ -69,7 +68,7 @@ export function EducationSection() {
                   id={`location-${index}`}
                   value={edu.location}
                   onChange={(e) =>
-                    handleEducationChange(index, "location", e.target.value)
+                    updateNestedField("education", index, "location", e.target.value)
                   }
                   className="mt-2"
                   placeholder="City, Country"
@@ -86,7 +85,7 @@ export function EducationSection() {
                   id={`start-date-${index}`}
                   value={edu.start_date}
                   onChange={(e) =>
-                    handleEducationChange(index, "start_date", e.target.value)
+                    updateNestedField("education", index, "start_date", e.target.value)
                   }
                   className="mt-2"
                   placeholder="e.g., Sep 2018"
@@ -103,7 +102,7 @@ export function EducationSection() {
                   id={`end-date-${index}`}
                   value={edu.end_date}
                   onChange={(e) =>
-                    handleEducationChange(index, "end_date", e.target.value)
+                    updateNestedField("education", index, "end_date", e.target.value)
                   }
                   className="mt-2"
                   placeholder="e.g., Jun 2022 or Present"

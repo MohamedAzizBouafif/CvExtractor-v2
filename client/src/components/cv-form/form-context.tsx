@@ -4,21 +4,16 @@ import type { CVData } from "@shared/schema";
 
 interface CVFormContextProps {
   formData: CVData;
-  handleInputChange: (field: keyof CVData, value: string) => void;
-  handleArrayInputChange: (field: keyof CVData, value: string) => void;
-  handleEducationChange: (index: number, field: string, value: string) => void;
-  handleExpertiseChange: (index: number, field: string, value: string) => void;
-  handleProjectChange: (
+  updateField: (field: keyof CVData, value: any) => void;
+  updateArrayField: (field: keyof CVData, value: string) => void;
+  updateNestedField: (
+    field: keyof CVData,
     index: number,
-    field: string,
+    subField: string,
     value: string | string[]
   ) => void;
-  handleProjectPhasesChange: (index: number, value: string) => void;
-  addEducation: () => void;
-  removeEducation: (index: number) => void;
-  addExperience: () => void;  removeExperience: (index: number) => void;
-  addProject: () => void;
-  removeProject: (index: number) => void;
+  addItem: (field: keyof CVData, template: any) => void;
+  removeItem: (field: keyof CVData, index: number) => void;
   handleSave: () => void;
   handleExportPDF: () => Promise<void>;
   handleReset: () => void;
@@ -31,159 +26,77 @@ interface CVFormProviderProps {
 
 const CVFormContext = createContext<CVFormContextProps | undefined>(undefined);
 
+// Helper function to ensure arrays are properly initialized
+const initializeArrays = (data: CVData): CVData => ({
+  ...data,
+  language: Array.isArray(data.language) ? data.language : [],
+  phone: Array.isArray(data.phone) ? data.phone : [],
+  education: Array.isArray(data.education) ? data.education : [],
+  skills: Array.isArray(data.skills) ? data.skills : [],
+  expertise: Array.isArray(data.expertise) ? data.expertise : [],
+  certificates: Array.isArray(data.certificates) ? data.certificates : [],
+  hobbies: Array.isArray(data.hobbies) ? data.hobbies : [],
+  projects: Array.isArray(data.projects) ? data.projects : [],
+  location: data.location || "",
+  linkedin: data.linkedin || "",
+});
+
+// Templates for new items
+const ITEM_TEMPLATES = {
+  education: { degree: "", institution: "", location: "", start_date: "", end_date: "" },
+  expertise: { date: "", company: "", role: "", description: "" },
+  projects: { project_name: "", industry: "", country: "", role: "", phases: [] },
+} as const;
+
 export function CVFormProvider({ children, initialData }: CVFormProviderProps) {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<CVData>({
-    ...initialData,
-    language: Array.isArray(initialData.language) ? initialData.language : [],
-    phone: Array.isArray(initialData.phone) ? initialData.phone : [],
-    education: Array.isArray(initialData.education)
-      ? initialData.education
-      : [],
-    skills: Array.isArray(initialData.skills) ? initialData.skills : [],
-    expertise: Array.isArray(initialData.expertise)
-      ? initialData.expertise
-      : [],
-    certificates: Array.isArray(initialData.certificates)
-      ? initialData.certificates
-      : [],
-    hobbies: Array.isArray(initialData.hobbies) ? initialData.hobbies : [],
-    projects: Array.isArray(initialData.projects) ? initialData.projects : [],
-    location: initialData.location || "",
-    linkedin: initialData.linkedin || "",
-  });
+  const [formData, setFormData] = useState<CVData>(initializeArrays(initialData));
 
-  // Input change handlers
-  const handleInputChange = (field: keyof CVData, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  // Generic field updater
+  const updateField = (field: keyof CVData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleArrayInputChange = (field: keyof CVData, value: string) => {
+  // Array field updater (comma-separated strings to arrays)
+  const updateArrayField = (field: keyof CVData, value: string) => {
     const itemsArray = value
       .split(",")
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0);
-    setFormData((prev) => ({
-      ...prev,
-      [field]: itemsArray,
-    }));
+      .map(item => item.trim())
+      .filter(item => item.length > 0);
+    updateField(field, itemsArray);
   };
 
-  const handleEducationChange = (
+  // Nested field updater (for objects within arrays)
+  const updateNestedField = (
+    field: keyof CVData,
     index: number,
-    field: string,
-    value: string
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      education: prev.education.map((edu, i) =>
-        i === index ? { ...edu, [field]: value } : edu
-      ),
-    }));
-  };
-
-  const handleExpertiseChange = (
-    index: number,
-    field: string,
-    value: string
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      expertise: prev.expertise.map((exp, i) =>
-        i === index ? { ...exp, [field]: value } : exp
-      ),
-    }));
-  };
-
-  const handleProjectChange = (
-    index: number,
-    field: string,
+    subField: string,
     value: string | string[]
   ) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      projects: prev.projects.map((proj, i) =>
-        i === index ? { ...proj, [field]: value } : proj
+      [field]: (prev[field] as any[]).map((item, i) =>
+        i === index ? { ...item, [subField]: value } : item
       ),
     }));
   };
 
-  const handleProjectPhasesChange = (index: number, value: string) => {
-    const phasesArray = value
-      .split(",")
-      .map((phase) => phase.trim())
-      .filter((phase) => phase.length > 0);
-    handleProjectChange(index, "phases", phasesArray);
-  };
-
-  // Add/Remove item handlers
-  const addEducation = () => {
-    setFormData((prev) => ({
+  // Generic item adder
+  const addItem = (field: keyof CVData, template: any) => {
+    setFormData(prev => ({
       ...prev,
-      education: [
-        ...prev.education,
-        {
-          degree: "",
-          institution: "",
-          location: "",
-          start_date: "",
-          end_date: "",
-        },
-      ],
+      [field]: [...(prev[field] as any[]), template],
     }));
   };
 
-  const removeEducation = (index: number) => {
-    setFormData((prev) => ({
+  // Generic item remover
+  const removeItem = (field: keyof CVData, index: number) => {
+    setFormData(prev => ({
       ...prev,
-      education: prev.education.filter((_, i) => i !== index),
+      [field]: (prev[field] as any[]).filter((_, i) => i !== index),
     }));
   };
 
-  const addExperience = () => {
-    setFormData((prev) => ({
-      ...prev,
-      expertise: [
-        ...prev.expertise,
-        { date: "", company: "", role: "", description: "" },
-      ],
-    }));
-  };
-
-  const removeExperience = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      expertise: prev.expertise.filter((_, i) => i !== index),
-    }));
-  };
-
-  const addProject = () => {
-    setFormData((prev) => ({
-      ...prev,
-      projects: [
-        ...prev.projects,
-        {
-          project_name: "",
-          industry: "",
-          country: "",
-          role: "",
-          phases: [],
-        },
-      ],
-    }));
-  };
-
-  const removeProject = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      projects: prev.projects.filter((_, i) => i !== index),
-    }));
-  };
-
-  // Action handlers
   const handleSave = () => {
     toast({
       title: "Changes saved",
@@ -200,21 +113,18 @@ export function CVFormProvider({ children, initialData }: CVFormProviderProps) {
 
       const response = await fetch('/api/generate-pdf', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
-      const result = await response.json();      if (result.success && result.pdfUrl) {
-        // Create a download link with proper filename
-        const firstName = formData.first_name || 'Unknown';
-        const lastName = formData.last_name || 'User';
-        const filename = `cv-${firstName}_${lastName}.pdf`;
+      const result = await response.json();
+
+      if (result.success && result.pdfUrl) {
+        const fileName = `cv-${formData.first_name || 'Unknown'}_${formData.last_name || 'User'}.pdf`;
         
         const link = document.createElement('a');
         link.href = result.pdfUrl;
-        link.download = filename;
+        link.download = fileName;
         link.target = '_blank';
         document.body.appendChild(link);
         link.click();
@@ -229,7 +139,6 @@ export function CVFormProvider({ children, initialData }: CVFormProviderProps) {
       }
     } catch (error: any) {
       console.error('PDF export error:', error);
-      
       toast({
         title: "Export Failed",
         description: error.message || "Could not generate PDF. Please try again.",
@@ -239,30 +148,7 @@ export function CVFormProvider({ children, initialData }: CVFormProviderProps) {
   };
 
   const handleReset = () => {
-    setFormData({
-      ...initialData,
-      language: Array.isArray(initialData.language)
-        ? [...initialData.language]
-        : [],
-      phone: Array.isArray(initialData.phone) ? [...initialData.phone] : [],
-      education: Array.isArray(initialData.education)
-        ? [...initialData.education]
-        : [],
-      skills: Array.isArray(initialData.skills) ? [...initialData.skills] : [],
-      expertise: Array.isArray(initialData.expertise)
-        ? [...initialData.expertise]
-        : [],
-      certificates: Array.isArray(initialData.certificates)
-        ? [...initialData.certificates]
-        : [],
-      hobbies: Array.isArray(initialData.hobbies)
-        ? [...initialData.hobbies]
-        : [],
-      projects: Array.isArray(initialData.projects)
-        ? [...initialData.projects]
-        : [],
-    });
-
+    setFormData(initializeArrays({ ...initialData }));
     toast({
       title: "Form reset",
       description: "All changes have been reverted to original extracted data.",
@@ -273,18 +159,12 @@ export function CVFormProvider({ children, initialData }: CVFormProviderProps) {
     <CVFormContext.Provider
       value={{
         formData,
-        handleInputChange,
-        handleArrayInputChange,
-        handleEducationChange,
-        handleExpertiseChange,
-        handleProjectChange,
-        handleProjectPhasesChange,
-        addEducation,
-        removeEducation,
-        addExperience,
-        removeExperience,
-        addProject,
-        removeProject,        handleSave,
+        updateField,
+        updateArrayField,
+        updateNestedField,
+        addItem,
+        removeItem,
+        handleSave,
         handleExportPDF,
         handleReset,
       }}
@@ -294,10 +174,24 @@ export function CVFormProvider({ children, initialData }: CVFormProviderProps) {
   );
 }
 
+// Convenience hooks for specific operations
 export const useCVForm = () => {
   const context = useContext(CVFormContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useCVForm must be used within a CVFormProvider");
   }
   return context;
+};
+
+export const useCVFormActions = () => {
+  const { addItem, removeItem } = useCVForm();
+  
+  return {
+    addEducation: () => addItem('education', ITEM_TEMPLATES.education),
+    removeEducation: (index: number) => removeItem('education', index),
+    addExperience: () => addItem('expertise', ITEM_TEMPLATES.expertise),
+    removeExperience: (index: number) => removeItem('expertise', index),
+    addProject: () => addItem('projects', ITEM_TEMPLATES.projects),
+    removeProject: (index: number) => removeItem('projects', index),
+  };
 };

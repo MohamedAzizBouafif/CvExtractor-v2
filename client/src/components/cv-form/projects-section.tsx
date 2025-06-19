@@ -2,16 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
-import { useCVForm } from "./form-context";
+import { useCVForm, useCVFormActions } from "./form-context";
 
-export function ProjectsSection() {
-  const {
-    formData,
-    handleProjectChange,
-    handleProjectPhasesChange,
-    addProject,
-    removeProject,
-  } = useCVForm();
+export function ProjectsSection() {  const { formData, updateNestedField, updateArrayField } = useCVForm();
+  const { addProject, removeProject } = useCVFormActions();
 
   return (
     <div className="space-y-6">
@@ -37,7 +31,7 @@ export function ProjectsSection() {
                   id={`project-name-${index}`}
                   value={project.project_name}
                   onChange={(e) =>
-                    handleProjectChange(index, "project_name", e.target.value)
+                    updateNestedField("projects", index, "project_name", e.target.value)
                   }
                   className="mt-2"
                   placeholder="Project name"
@@ -54,7 +48,7 @@ export function ProjectsSection() {
                   id={`industry-${index}`}
                   value={project.industry}
                   onChange={(e) =>
-                    handleProjectChange(index, "industry", e.target.value)
+                    updateNestedField("projects", index, "industry", e.target.value)
                   }
                   className="mt-2"
                   placeholder="e.g., Finance, Healthcare"
@@ -74,7 +68,7 @@ export function ProjectsSection() {
                   id={`country-${index}`}
                   value={project.country}
                   onChange={(e) =>
-                    handleProjectChange(index, "country", e.target.value)
+                    updateNestedField("projects", index, "country", e.target.value)
                   }
                   className="mt-2"
                   placeholder="Country"
@@ -91,7 +85,7 @@ export function ProjectsSection() {
                   id={`project-role-${index}`}
                   value={project.role}
                   onChange={(e) =>
-                    handleProjectChange(index, "role", e.target.value)
+                    updateNestedField("projects", index, "role", e.target.value)
                   }
                   className="mt-2"
                   placeholder="Your role in the project"
@@ -112,7 +106,9 @@ export function ProjectsSection() {
                   Array.isArray(project.phases) ? project.phases.join(", ") : ""
                 }
                 onChange={(e) =>
-                  handleProjectPhasesChange(index, e.target.value)
+                  updateNestedField("projects", index, "phases", 
+                    e.target.value.split(",").map(p => p.trim()).filter(p => p.length > 0)
+                  )
                 }
                 className="mt-2"
                 placeholder="Comma-separated phases (e.g., Design, Development, Testing)"

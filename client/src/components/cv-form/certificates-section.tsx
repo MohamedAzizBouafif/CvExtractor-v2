@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { useCVForm } from "./form-context";
 
 export function CertificatesSection() {
-  const { formData, handleArrayInputChange } = useCVForm();
+  const { formData, updateArrayField } = useCVForm();
 
   return (
     <div className="space-y-6">
@@ -26,7 +26,7 @@ export function CertificatesSection() {
               : ""
           }
           onChange={(e) =>
-            handleArrayInputChange("certificates", e.target.value)
+            updateArrayField("certificates", e.target.value)
           }
           className="mt-2"
           placeholder="Comma-separated certificates"

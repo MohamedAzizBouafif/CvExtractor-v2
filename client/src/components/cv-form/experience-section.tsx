@@ -3,11 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2 } from "lucide-react";
-import { useCVForm } from "./form-context";
+import { useCVForm, useCVFormActions } from "./form-context";
 
-export function ExperienceSection() {
-  const { formData, handleExpertiseChange, addExperience, removeExperience } =
-    useCVForm();
+export function ExperienceSection() {  const { formData, updateNestedField } = useCVForm();
+  const { addExperience, removeExperience } = useCVFormActions();
 
   return (
     <div className="space-y-6">
@@ -33,7 +32,7 @@ export function ExperienceSection() {
                   id={`date-${index}`}
                   value={exp.date}
                   onChange={(e) =>
-                    handleExpertiseChange(index, "date", e.target.value)
+                    updateNestedField("expertise", index, "date", e.target.value)
                   }
                   className="mt-2"
                   placeholder="e.g., 2020 - 2022"
@@ -50,7 +49,7 @@ export function ExperienceSection() {
                   id={`company-${index}`}
                   value={exp.company}
                   onChange={(e) =>
-                    handleExpertiseChange(index, "company", e.target.value)
+                    updateNestedField("expertise", index, "company", e.target.value)
                   }
                   className="mt-2"
                   placeholder="Company name"
@@ -67,7 +66,7 @@ export function ExperienceSection() {
                   id={`role-${index}`}
                   value={exp.role}
                   onChange={(e) =>
-                    handleExpertiseChange(index, "role", e.target.value)
+                    updateNestedField("expertise", index, "role", e.target.value)
                   }
                   className="mt-2"
                   placeholder="Job title"
@@ -85,7 +84,7 @@ export function ExperienceSection() {
                 id={`description-${index}`}
                 value={exp.description}
                 onChange={(e) =>
-                  handleExpertiseChange(index, "description", e.target.value)
+                  updateNestedField("expertise", index, "description", e.target.value)
                 }
                 className="mt-2"
                 placeholder="Brief description of your responsibilities"

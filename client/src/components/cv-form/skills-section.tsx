@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { useCVForm } from "./form-context";
 
 export function SkillsSection() {
-  const { formData, handleArrayInputChange } = useCVForm();
+  const { formData, updateArrayField } = useCVForm();
 
   return (
     <div className="space-y-6">
@@ -20,7 +20,7 @@ export function SkillsSection() {
           value={
             Array.isArray(formData.skills) ? formData.skills.join(", ") : ""
           }
-          onChange={(e) => handleArrayInputChange("skills", e.target.value)}
+          onChange={(e) => updateArrayField("skills", e.target.value)}
           className="mt-2"
           placeholder="Comma-separated skills (e.g., JavaScript, React, Python)"
         />

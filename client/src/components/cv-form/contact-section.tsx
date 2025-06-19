@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { useCVForm } from "./form-context";
 
 export function ContactSection() {
-  const { formData, handleInputChange, handleArrayInputChange } = useCVForm();
+  const { formData, updateField, updateArrayField } = useCVForm();
 
   return (
     <div className="space-y-6">
@@ -21,7 +21,7 @@ export function ContactSection() {
             id="email"
             type="email"
             value={formData.email}
-            onChange={(e) => handleInputChange("email", e.target.value)}
+            onChange={(e) => updateField("email", e.target.value)}
             className="mt-2"
             placeholder="email@example.com"
           />
@@ -38,7 +38,7 @@ export function ContactSection() {
             value={
               Array.isArray(formData.phone) ? formData.phone.join(", ") : ""
             }
-            onChange={(e) => handleArrayInputChange("phone", e.target.value)}
+            onChange={(e) => updateArrayField("phone", e.target.value)}
             className="mt-2"
             placeholder="Phone numbers (comma separated)"
           />

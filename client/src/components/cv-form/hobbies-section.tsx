@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { useCVForm } from "./form-context";
 
 export function HobbiesSection() {
-  const { formData, handleArrayInputChange } = useCVForm();
+  const { formData, updateArrayField } = useCVForm();
 
   return (
     <div className="space-y-6">
@@ -20,7 +20,7 @@ export function HobbiesSection() {
           value={
             Array.isArray(formData.hobbies) ? formData.hobbies.join(", ") : ""
           }
-          onChange={(e) => handleArrayInputChange("hobbies", e.target.value)}
+          onChange={(e) => updateArrayField("hobbies", e.target.value)}
           className="mt-2"
           placeholder="Comma-separated hobbies"
         />

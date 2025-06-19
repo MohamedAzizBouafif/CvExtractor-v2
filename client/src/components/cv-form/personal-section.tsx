@@ -10,7 +10,7 @@ import {
 import { useCVForm } from "./form-context";
 
 export function PersonalSection() {
-  const { formData, handleInputChange, handleArrayInputChange } = useCVForm();
+  const { formData, updateField, updateArrayField } = useCVForm();
 
   return (
     <div className="space-y-6">
@@ -30,7 +30,7 @@ export function PersonalSection() {
           <Input
             id="firstName"
             value={formData.first_name}
-            onChange={(e) => handleInputChange("first_name", e.target.value)}
+            onChange={(e) => updateField("first_name", e.target.value)}
             className="mt-2"
             placeholder="Enter first name"
           />
@@ -47,7 +47,7 @@ export function PersonalSection() {
           <Input
             id="lastName"
             value={formData.last_name}
-            onChange={(e) => handleInputChange("last_name", e.target.value)}
+            onChange={(e) => updateField("last_name", e.target.value)}
             className="mt-2"
             placeholder="Enter last name"
           />
@@ -62,7 +62,7 @@ export function PersonalSection() {
           </Label>
           <Select
             value={formData.sex}
-            onValueChange={(value) => handleInputChange("sex", value)}
+            onValueChange={(value) => updateField("sex", value)}
           >
             <SelectTrigger className="mt-2">
               <SelectValue placeholder="Select..." />
@@ -93,7 +93,7 @@ export function PersonalSection() {
                 ? formData.language.join(", ")
                 : ""
             }
-            onChange={(e) => handleArrayInputChange("language", e.target.value)}
+            onChange={(e) => updateArrayField("language", e.target.value)}
             className="mt-2"
             placeholder="Languages (comma separated)"
           />
@@ -112,7 +112,7 @@ export function PersonalSection() {
           <Input
             id="location"
             value={formData.location}
-            onChange={(e) => handleInputChange("location", e.target.value)}
+            onChange={(e) => updateField("location", e.target.value)}
             className="mt-2"
             placeholder="City, Country"
           />
@@ -129,7 +129,7 @@ export function PersonalSection() {
           <Input
             id="linkedin"
             value={formData.linkedin}
-            onChange={(e) => handleInputChange("linkedin", e.target.value)}
+            onChange={(e) => updateField("linkedin", e.target.value)}
             className="mt-2"
             placeholder="LinkedIn URL"
           />
