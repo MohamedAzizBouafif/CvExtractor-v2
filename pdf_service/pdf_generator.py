@@ -1,308 +1,310 @@
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
-from reportlab.graphics.shapes import Drawing, Rect
-from reportlab.graphics import renderPDF
-import datetime
+from reportlab.lib.units import inch, mm
+from reportlab.lib.enums import TA_LEFT
+from reportlab.platypus.doctemplate import BaseDocTemplate
+from reportlab.pdfgen import canvas
 import os
 
 # SAPPCON Brand Colors
-SAPPCON_BLUE = colors.Color(0.161, 0.408, 0.808)  # #2968CE
-SAPPCON_GOLD = colors.Color(0.706, 0.596, 0.373)  # #B4975F
-LIGHT_GRAY = colors.Color(0.95, 0.95, 0.95)
-DARK_GRAY = colors.Color(0.4, 0.4, 0.4)
+SAPPCON_DARK_BLUE = colors.Color(0.08, 0.22, 0.51)
+SAPPCON_BLUE = colors.Color(0.20, 0.45, 0.75)
+SAPPCON_LIGHT_BLUE = colors.Color(0.52, 0.73, 0.93)
 
-def create_text_header():
-    """Create a branded text header when logo is not available"""
-    from reportlab.lib.styles import getSampleStyleSheet
+class CVPageTemplate(PageTemplate):
+    """Custom page template with colored band and logo precisely positioned at the top of the page"""
+    
+    def __init__(self, id, frames, pagesize=landscape(A4)):
+        PageTemplate.__init__(self, id, frames, pagesize=pagesize)
+        self.pagesize = pagesize
+        
+    def beforeDrawPage(self, canvas, doc):
+        """Draw colored band and logo directly on the canvas, before any content"""
+        canvas.saveState()
+        
+        # Get page dimensions
+        page_width, page_height = self.pagesize
+        
+        # Draw colored top band (full width, no margins)
+        band_height = 8*mm
+        band_width = page_width
+        
+        # Draw three colored rectangles for the band
+        # Dark blue section
+        canvas.setFillColor(SAPPCON_DARK_BLUE)
+        canvas.rect(0, page_height - band_height, band_width/3, band_height, fill=1, stroke=0)
+        
+        # Medium blue section
+        canvas.setFillColor(SAPPCON_BLUE)
+        canvas.rect(band_width/3, page_height - band_height, band_width/3, band_height, fill=1, stroke=0)
+        
+        # Light blue section
+        canvas.setFillColor(SAPPCON_LIGHT_BLUE)
+        canvas.rect(2*band_width/3, page_height - band_height, band_width/3, band_height, fill=1, stroke=0)        
+        # Draw logo in TRUE top-right corner
+        logo_width = 1.2*inch
+        logo_height = 0.6*inch
+        logo_x = page_width - logo_width - 0.3*inch
+        logo_y = page_height - logo_height - 0.3*inch
+        
+        # Try to load logo image
+        logo_paths = [
+            os.path.join(os.path.dirname(__file__), 'logo.png'),
+            os.path.join(os.path.dirname(__file__), '..', 'client', 'LOGO.ico'),
+        ]
+        
+        logo_drawn = False
+        for logo_path in logo_paths:
+            if os.path.exists(logo_path):
+                try:
+                    canvas.drawImage(logo_path, logo_x, logo_y, width=logo_width, height=logo_height, preserveAspectRatio=True)
+                    print(f"Logo drawn from: {logo_path}")
+                    logo_drawn = True
+                    break
+                except Exception as e:
+                    print(f"Failed to draw logo from {logo_path}: {e}")
+                    continue
+        
+        # Fallback to text logo if image loading fails
+        if not logo_drawn:
+            print("Using fallback text logo")
+            canvas.setFillColor(SAPPCON_BLUE)
+            canvas.rect(logo_x, logo_y, logo_width, logo_height, fill=1, stroke=0)
+            canvas.setFillColor(colors.white)
+            canvas.setFont("Helvetica-Bold", 12)
+            text_width = canvas.stringWidth("SAPPCON", "Helvetica-Bold", 12)
+            text_x = logo_x + (logo_width - text_width) / 2
+            text_y = logo_y + (logo_height - 12) / 2
+            canvas.drawString(text_x, text_y, "SAPPCON")
+        
+        canvas.restoreState()
+
+def create_styles():
+    """Create compact styles for single-page CV"""
     styles = getSampleStyleSheet()
     
-    sappcon_title = Paragraph(
-        '<font color="#2968CE" size="24"><b>SAPPCON</b></font><br/>'
-        '<font color="#B4975F" size="14">CONSULTING FOR SAP APPLICATIONS</font><br/>'
-        '<font color="#2968CE" size="10">Professional CV Service</font>',
-        styles['Normal']
-    )
-    return sappcon_title
+    return {
+        'name': ParagraphStyle(
+            'NameStyle', parent=styles['Normal'],
+            fontSize=12, fontName='Helvetica-Bold', textColor=colors.black,
+            alignment=TA_LEFT, spaceAfter=2, spaceBefore=0
+        ),
+        'job_title': ParagraphStyle(
+            'JobTitleStyle', parent=styles['Normal'],
+            fontSize=9, fontName='Helvetica', textColor=colors.black,
+            alignment=TA_LEFT, spaceAfter=2, spaceBefore=0
+        ),
+        'contact': ParagraphStyle(
+            'ContactStyle', parent=styles['Normal'],
+            fontSize=8, fontName='Helvetica', textColor=colors.black,
+            alignment=TA_LEFT, spaceAfter=1, spaceBefore=0
+        ),
+        'section_header': ParagraphStyle(
+            'SectionHeader', parent=styles['Normal'],
+            fontSize=9, fontName='Helvetica-Bold', textColor=colors.black,
+            alignment=TA_LEFT, spaceAfter=2, spaceBefore=4
+        ),
+        'body': ParagraphStyle(
+            'BodyText', parent=styles['Normal'],
+            fontSize=8, fontName='Helvetica', textColor=colors.black,
+            spaceAfter=1, alignment=TA_LEFT
+        ),
+        'job_company': ParagraphStyle(
+            'JobCompany', parent=styles['Normal'],
+            fontSize=8, fontName='Helvetica-Bold', textColor=colors.black,
+            spaceAfter=1, spaceBefore=1
+        ),
+        'job_title_entry': ParagraphStyle(
+            'JobTitleEntry', parent=styles['Normal'],
+            fontSize=8, fontName='Helvetica', textColor=colors.black,
+            spaceAfter=0
+        ),
+        'date': ParagraphStyle(
+            'DateStyle', parent=styles['Normal'],
+            fontSize=7, fontName='Helvetica-Oblique', textColor=colors.gray,
+            spaceAfter=2
+        ),
+        'list_item': ParagraphStyle(
+            'ListItem', parent=styles['Normal'],
+            fontSize=8, fontName='Helvetica', textColor=colors.black,
+            spaceAfter=1, leftIndent=0
+        )
+    }
+
+def add_spacer(elements, height_mm=3):
+    """Add spacing between elements"""
+    elements.append(Spacer(1, height_mm*mm))
 
 def generate_pdf(cv_data, output_path):
-    """
-    Generate a concise, professional PDF file from CV data with SAPPCON branding
+    """Generate a clean, professional three-column landscape CV"""
     
-    Args:
-        cv_data (dict): CV data in JSON format
-        output_path (str): Path to save the PDF file
-    """
-    # Create document with tighter margins
-    doc = SimpleDocTemplate(
-        output_path, 
-        pagesize=A4,
-        rightMargin=40,
-        leftMargin=40,
-        topMargin=30,
-        bottomMargin=40
-    )
-    styles = getSampleStyleSheet()
-    
-    # Create compact branded styles
-    title_style = ParagraphStyle(
-        name='CustomTitle', 
-        parent=styles['Heading1'], 
-        fontSize=22,
-        fontName='Helvetica-Bold',
-        textColor=SAPPCON_BLUE,
-        alignment=TA_CENTER,
-        spaceAfter=12,
-        spaceBefore=5
+    # Create document
+    doc = BaseDocTemplate(
+        output_path,
+        pagesize=landscape(A4),
+        topMargin=0.5*inch,
+        bottomMargin=0.5*inch,
+        leftMargin=0.5*inch,
+        rightMargin=0.5*inch
     )
     
-    section_style = ParagraphStyle(
-        name='CustomSection', 
-        parent=styles['Heading2'], 
-        fontSize=14,
-        fontName='Helvetica-Bold',
-        textColor=SAPPCON_BLUE,
-        spaceAfter=6,
-        spaceBefore=10,
-        borderWidth=1,
-        borderColor=SAPPCON_GOLD,
-        borderPadding=4,
-        backColor=LIGHT_GRAY
-    )
+    # Calculate layout
+    page_width, page_height = landscape(A4)
+    margin = 0.5*inch
+    usable_width = page_width - (2 * margin)
+    col_gap = 0.2*inch
+    col_width = (usable_width - (2 * col_gap)) / 3
+    top_offset = 15*mm  # Space for colored band
+    adjusted_height = page_height - (2 * margin) - top_offset
     
-    subsection_style = ParagraphStyle(
-        name='CustomSubSection', 
-        parent=styles['Heading3'], 
-        fontSize=12,
-        fontName='Helvetica-Bold',
-        textColor=SAPPCON_BLUE,
-        spaceAfter=3,
-        spaceBefore=5
-    )
+    # Create three column frames
+    left_frame = Frame(margin, margin, col_width, adjusted_height, id='left_col', 
+                      leftPadding=3*mm, rightPadding=3*mm, topPadding=0, bottomPadding=0)
+    center_frame = Frame(margin + col_width + col_gap, margin, col_width, adjusted_height, 
+                        id='center_col', leftPadding=3*mm, rightPadding=3*mm, topPadding=0, bottomPadding=0)
+    right_frame = Frame(margin + 2*(col_width + col_gap), margin, col_width, adjusted_height, 
+                       id='right_col', leftPadding=3*mm, rightPadding=3*mm, topPadding=0, bottomPadding=0)
     
-    contact_style = ParagraphStyle(
-        name='ContactStyle',
-        parent=styles['Normal'],
-        fontSize=10,
-        fontName='Helvetica',
-        textColor=DARK_GRAY,
-        spaceAfter=2
-    )
+    # Add page template with colored band and logo
+    page_template = CVPageTemplate('main', [left_frame, center_frame, right_frame])
+    doc.addPageTemplates([page_template])
     
-    body_style = ParagraphStyle(
-        name='BodyStyle',
-        parent=styles['Normal'],
-        fontSize=10,
-        fontName='Helvetica',
-        textColor=colors.black,
-        spaceAfter=3,
-        alignment=TA_LEFT
-    )
+    # Get styles and create content
+    styles = create_styles()
+    elements = []
     
-    # Content elements
-    elements = []    # Compact header with logo and company branding
-    header_data = []
+    # === LEFT COLUMN ===
+    add_spacer(elements, 5)  # Space for band
     
-    # Try to include logo if it exists
-    logo_path = os.path.join(os.path.dirname(__file__), 'logo.png')
-    if os.path.exists(logo_path):
-        try:
-            # Smaller, more efficient logo size
-            logo = Image(logo_path, width=1.8*inch, height=0.7*inch)
-            logo.hAlign = 'LEFT'
-            
-            # Compact company info
-            company_info = Paragraph(
-                '<font color="#B4975F" size="12"><b>CONSULTING FOR SAP APPLICATIONS</b></font>',
-                styles['Normal']
-            )
-            
-            header_data.append([logo, company_info])
-        except Exception as e:
-            print(f"Logo loading error: {e}")
-            # Fallback to text header
-            header_data.append([create_text_header()])
+    # Name and basic info
+    name = f"{cv_data.get('first_name', '')} {cv_data.get('last_name', '')}".strip()
+    if name:
+        elements.append(Paragraph(name, styles['name']))
+    
+    # Job title from summary
+    summary = cv_data.get('summary', '')
+    if summary:
+        job_title = summary.split('.')[0].strip()[:60]
     else:
-        # Create a branded text header when logo is not available
-        header_data.append([create_text_header()])
+        job_title = "Professional"
+    elements.append(Paragraph(job_title, styles['job_title']))
+    add_spacer(elements)
     
-    if header_data:
-        header_table = Table(header_data, colWidths=[3*inch, 4*inch])
-        header_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (0, 0), 'LEFT'),    # Logo left
-            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),   # Company info right
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 5),
-        ]))
-        elements.append(header_table)
-        elements.append(Spacer(1, 0.15 * inch))
-      # CV Title with candidate name
-    name = f"{cv_data.get('first_name', '')} {cv_data.get('last_name', '')}"
-    elements.append(Paragraph(name, title_style))
+    # Contact info
+    for field in ['location', 'email']:
+        if cv_data.get(field):
+            elements.append(Paragraph(cv_data[field], styles['contact']))
     
-    # Brief professional title (if summary exists, use first sentence only)
-    if cv_data.get('summary'):
-        title_line = cv_data.get('summary', '').split('.')[0][:80] + ("..." if len(cv_data.get('summary', '')) > 80 else "")
-        title_para = ParagraphStyle(
-            name='TitleLine',
-            parent=styles['Normal'],
-            fontSize=12,
-            fontName='Helvetica-Oblique',
-            textColor=SAPPCON_GOLD,
-            alignment=TA_CENTER,
-            spaceAfter=8
-        )
-        elements.append(Paragraph(title_line, title_para))
+    # Phone numbers
+    phones = cv_data.get('phone', [])
+    for phone in phones[:2]:
+        if phone:
+            clean_phone = phone.replace("tel:", "").replace("phone:", "").strip()
+            elements.append(Paragraph(clean_phone, styles['contact']))
     
-    elements.append(Spacer(1, 0.1 * inch))
-      # Compact Contact Information in single line
-    elements.append(Paragraph("Contact", section_style))
+    if cv_data.get('linkedin'):
+        elements.append(Paragraph(cv_data['linkedin'], styles['contact']))
     
-    contact_info = []
-    if cv_data.get('email'):
-        contact_info.append(f"✉ {cv_data.get('email')}")
-    if cv_data.get('phone'):
-        phones = cv_data.get('phone') if isinstance(cv_data.get('phone'), list) else [cv_data.get('phone')]
-        contact_info.append(f"📞 {', '.join(phones)}")
-    if cv_data.get('location'):
-        contact_info.append(f"📍 {cv_data.get('location')}")
+    add_spacer(elements, 5)
     
-    if contact_info:
-        contact_text = " | ".join(contact_info)
-        elements.append(Paragraph(contact_text, contact_style))
+    # Languages
+    languages = cv_data.get('language', [])
+    if languages:
+        elements.append(Paragraph("Languages", styles['section_header']))
+        for lang in languages:
+            elements.append(Paragraph(lang, styles['list_item']))
+        add_spacer(elements, 5)
     
-    elements.append(Spacer(1, 0.1 * inch))
+    # Skills
+    skills = cv_data.get('skills', [])
+    if skills:
+        elements.append(Paragraph("Skills", styles['section_header']))
+        for skill in skills[:8]:
+            elements.append(Paragraph(skill, styles['list_item']))
+        add_spacer(elements, 5)
     
-    # Summary with compact styling
-    if cv_data.get('summary'):
-        elements.append(Paragraph("Summary", section_style))
-        summary_text = cv_data.get('summary', '')
-        elements.append(Paragraph(summary_text, body_style))
-        elements.append(Spacer(1, 0.1 * inch))
+    # Hobbies
+    hobbies = cv_data.get('hobbies', [])
+    if hobbies:
+        elements.append(Paragraph("Interests", styles['section_header']))
+        for hobby in hobbies[:5]:
+            elements.append(Paragraph(hobby, styles['list_item']))
     
-    # Skills with compact styling
-    if cv_data.get('skills', []):
-        elements.append(Paragraph("Skills", section_style))
-        
-        skills = cv_data.get('skills', [])
-        # Create a more compact skills list
-        skills_list = skills if isinstance(skills, list) else [str(skills)]
-        skills_text = " • ".join(skills_list)
-        elements.append(Paragraph(skills_text, body_style))
-        elements.append(Spacer(1, 0.1 * inch))    # Experience with compact styling
-    experience = cv_data.get('expertise', [])
-    if experience:
-        elements.append(Paragraph("Experience", section_style))
-        
-        for exp in experience:
-            company = exp.get('company', 'Unknown Company')
-            role = exp.get('role', 'Unknown Position')
-            date = exp.get('date', 'Unknown Date')
-            description = exp.get('description', '')
-            
-            # Create compact experience entry
-            role_company = f'<font color="#2968CE"><b>{role}</b></font> at <font color="#B4975F">{company}</font> ({date})'
-            elements.append(Paragraph(role_company, body_style))
-            
-            if description:
-                # Truncate long descriptions
-                desc_text = description[:200] + "..." if len(description) > 200 else description
-                elements.append(Paragraph(desc_text, body_style))
-            elements.append(Spacer(1, 0.08 * inch))
-        
-        elements.append(Spacer(1, 0.05 * inch))    # Education with compact styling
+    # === CENTER COLUMN ===
+    elements.append(FrameBreak())
+    
+    # Professional Summary
+    if summary:
+        elements.append(Paragraph("Professional Summary", styles['section_header']))
+        # Truncate if too long
+        display_summary = summary[:300] + "..." if len(summary) > 300 else summary
+        elements.append(Paragraph(display_summary, styles['body']))
+        add_spacer(elements, 5)
+    
+    # Education
     education = cv_data.get('education', [])
     if education:
-        elements.append(Paragraph("Education", section_style))
-        
+        elements.append(Paragraph("Education", styles['section_header']))
         for edu in education:
-            institution = edu.get('institution', 'Unknown Institution')
-            degree = edu.get('degree', 'Unknown Degree')
-            start_date = edu.get('start_date', '')
-            end_date = edu.get('end_date', 'Present')
-            location = edu.get('location', '')
-            
-            # Create compact education entry
-            degree_text = f'<font color="#2968CE"><b>{degree}</b></font> - <font color="#B4975F">{institution}</font>'
-            if start_date or end_date:
-                date_range = f" ({start_date}-{end_date})" if start_date else f" ({end_date})"
-                degree_text += date_range
-            
-            elements.append(Paragraph(degree_text, body_style))
-            elements.append(Spacer(1, 0.05 * inch))
-        
-        elements.append(Spacer(1, 0.05 * inch))    # Projects with compact styling
-    projects = cv_data.get('projects', [])
-    if projects:
-        elements.append(Paragraph("Projects", section_style))
-        
-        for proj in projects:
-            name = proj.get('project_name', 'Unknown Project')
-            industry = proj.get('industry', '')
-            country = proj.get('country', '')
-            role = proj.get('role', '')
-            
-            # Create compact project entry
-            project_line = f'<font color="#2968CE"><b>{name}</b></font>'
-            if role:
-                project_line += f' - <font color="#B4975F">{role}</font>'
-            if industry:
-                project_line += f' ({industry})'
-            
-            elements.append(Paragraph(project_line, body_style))
-            elements.append(Spacer(1, 0.05 * inch))        
-        elements.append(Spacer(1, 0.05 * inch))
+            if edu.get('degree'):
+                elements.append(Paragraph(edu['degree'], styles['job_title_entry']))
+            if edu.get('institution'):
+                elements.append(Paragraph(edu['institution'], styles['job_company']))
+            if edu.get('start_date') and edu.get('end_date'):
+                date_range = f"{edu['start_date']} - {edu['end_date']}"
+                elements.append(Paragraph(date_range, styles['date']))
+            add_spacer(elements)
+        add_spacer(elements, 5)
     
-    # Certificates with compact styling
+    # Certificates
     certificates = cv_data.get('certificates', [])
     if certificates:
-        elements.append(Paragraph("Certifications", section_style))
-        
-        cert_list = []
-        for cert in certificates:
-            if isinstance(cert, str):
-                cert_list.append(cert)
-            else:
-                name = cert.get('name', 'Unknown Certificate')
-                cert_list.append(name)
-        
-        # Display certificates in a compact format
-        certs_text = " • ".join(cert_list)
-        elements.append(Paragraph(certs_text, body_style))
-        elements.append(Spacer(1, 0.1 * inch))
-      # Hobbies & Interests with compact styling
-    if cv_data.get('hobbies', []):
-        elements.append(Paragraph("Interests", section_style))
-        
-        hobbies = cv_data.get('hobbies', [])
-        if isinstance(hobbies, list):
-            hobbies_text = " • ".join(hobbies)
-        else:
-            hobbies_text = str(hobbies)
-        
-        elements.append(Paragraph(hobbies_text, body_style))
-        elements.append(Spacer(1, 0.1 * inch))
+        elements.append(Paragraph("Certifications", styles['section_header']))
+        for cert in certificates[:6]:
+            elements.append(Paragraph(cert, styles['list_item']))
+        add_spacer(elements, 5)
     
-    # Professional footer with SAPPCON branding
-    footer_style = ParagraphStyle(
-        name='Footer',
-        parent=body_style,
-        fontSize=10,
-        textColor=DARK_GRAY,
-        alignment=TA_CENTER,
-        spaceAfter=10,
-        spaceBefore=20
-    )
+    # === RIGHT COLUMN ===
+    elements.append(FrameBreak())
     
-    footer_content = (
-        f'<font color="#2968CE">CV generated by SAPPCON Professional CV Service</font><br/>'
-        f'<font color="#B4975F">Generated on {datetime.datetime.now().strftime("%B %d, %Y")}</font>'
-    )
-    elements.append(Paragraph(footer_content, footer_style))
+    # Professional Experience
+    experience = cv_data.get('expertise', [])
+    if experience:
+        elements.append(Paragraph("Professional Experience", styles['section_header']))
+        for exp in experience:
+            if exp.get('role'):
+                elements.append(Paragraph(exp['role'], styles['job_title_entry']))
+            if exp.get('company'):
+                elements.append(Paragraph(exp['company'], styles['job_company']))
+            if exp.get('date'):
+                elements.append(Paragraph(exp['date'], styles['date']))
+            if exp.get('description'):
+                desc = exp['description'][:150] + "..." if len(exp['description']) > 150 else exp['description']
+                elements.append(Paragraph(desc, styles['body']))
+            add_spacer(elements)
+        add_spacer(elements, 5)
+    
+    # Projects
+    projects = cv_data.get('projects', [])
+    if projects:
+        elements.append(Paragraph("Project Experience", styles['section_header']))
+        for proj in projects:
+            if proj.get('project_name'):
+                elements.append(Paragraph(proj['project_name'], styles['job_title_entry']))
+            if proj.get('role'):
+                elements.append(Paragraph(proj['role'], styles['job_company']))
+            if proj.get('industry') and proj.get('country'):
+                location_industry = f"{proj['industry']}, {proj['country']}"
+                elements.append(Paragraph(location_industry, styles['date']))
+            add_spacer(elements)
     
     # Build PDF
-    doc.build(elements)
+    try:
+        doc.build(elements)
+        print(f"PDF generated successfully: {output_path}")
+        return True
+    except Exception as e:
+        print(f"Error generating PDF: {e}")
+        return False
